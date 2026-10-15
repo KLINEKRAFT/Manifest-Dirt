@@ -4,6 +4,62 @@ import Image from "next/image";
 import { ArrowUpRight, Plus, X } from "lucide-react";
 import { campaign, fundingPercent } from "@/data/campaign";
 
+// A deterministic imaginary elevation field: contours describe continuous
+// ridges and valleys, never real coordinates or identified properties.
+function elevation(x: number, y: number) {
+  return (
+    25 * Math.sin(x / 170 + Math.sin(y / 190)) +
+    19 * Math.cos(y / 140 - x / 390) +
+    9 * Math.sin(x / 67 + y / 99) +
+    4 * Math.cos(y / 32 - x / 55) +
+    2 * Math.sin(x / 19 + Math.cos(y / 29))
+  );
+}
+function makeContours() {
+  const step = 9;
+  const columns = 100;
+  const rows = 73;
+  const field = Array.from({ length: rows + 1 }, (_, y) =>
+    Array.from({ length: columns + 1 }, (_, x) =>
+      elevation(x * step, y * step),
+    ),
+  );
+  return Array.from({ length: 30 }, (_, level) => {
+    const height = -58 + level * 4;
+    let path = "";
+    for (let y = 0; y < rows; y++)
+      for (let x = 0; x < columns; x++) {
+        const vertices = [
+          [x * step, y * step],
+          [(x + 1) * step, y * step],
+          [(x + 1) * step, (y + 1) * step],
+          [x * step, (y + 1) * step],
+        ];
+        const values = [
+          field[y][x],
+          field[y][x + 1],
+          field[y + 1][x + 1],
+          field[y + 1][x],
+        ];
+        const crossings: number[][] = [];
+        for (let edge = 0; edge < 4; edge++) {
+          const next = (edge + 1) % 4;
+          if (values[edge] < height !== values[next] < height) {
+            const t = (height - values[edge]) / (values[next] - values[edge]);
+            crossings.push([
+              vertices[edge][0] + t * (vertices[next][0] - vertices[edge][0]),
+              vertices[edge][1] + t * (vertices[next][1] - vertices[edge][1]),
+            ]);
+          }
+        }
+        for (let i = 0; i + 1 < crossings.length; i += 2) {
+          path += `M${crossings[i][0].toFixed(1)},${crossings[i][1].toFixed(1)}L${crossings[i + 1][0].toFixed(1)},${crossings[i + 1][1].toFixed(1)}`;
+        }
+      }
+    return { path, major: level % 5 === 0 };
+  });
+}
+const terrainContours = makeContours();
 function Contours() {
   return (
     <svg
@@ -13,72 +69,126 @@ function Contours() {
       aria-hidden="true"
     >
       <defs>
-        <pattern id="grid" width="75" height="75" patternUnits="userSpaceOnUse">
+        <pattern
+          id="survey-grid"
+          width="90"
+          height="90"
+          patternUnits="userSpaceOnUse"
+        >
           <path
-            d="M75 0H0V75"
+            d="M90 0H0V90"
             fill="none"
             stroke="currentColor"
-            strokeWidth=".5"
+            strokeWidth=".65"
+          />
+          <path
+            d="M42 45H48M45 42V48"
+            stroke="currentColor"
+            strokeWidth=".75"
           />
         </pattern>
-        <filter id="grain">
+        <filter id="paper-relief" x="0" y="0" width="100%" height="100%">
           <feTurbulence
             type="fractalNoise"
-            baseFrequency=".65"
+            baseFrequency=".018 .025"
             numOctaves="3"
+            seed="12"
+          />
+          <feDiffuseLighting
+            surfaceScale="4"
+            diffuseConstant=".7"
+            lightingColor="#bcc4a0"
+          >
+            <feDistantLight azimuth="235" elevation="42" />
+          </feDiffuseLighting>
+          <feBlend in="SourceGraphic" mode="soft-light" />
+        </filter>
+        <filter id="map-grain">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency=".7"
+            numOctaves="3"
+            seed="8"
             stitchTiles="stitch"
           />
           <feColorMatrix type="saturate" values="0" />
         </filter>
       </defs>
-      <rect width="900" height="650" fill="url(#grid)" />
-      <g
-        className="terrain-lines"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth=".7"
-      >
-        {Array.from({ length: 32 }, (_, i) => (
+      <rect
+        className="relief-surface"
+        width="900"
+        height="650"
+        fill="#263b2e"
+        filter="url(#paper-relief)"
+      />
+      <g className="terrain-lines" fill="none" stroke="#b5bd8d">
+        {terrainContours.map(({ path, major }, i) => (
           <path
             key={i}
-            d={`M${-200 + i * 15} -30 C${30 + i * 20} ${150 + i * 3},${500 - i * 9} ${80 + i * 9},${410 + i * 12} ${260 + i * 7} S${170 + i * 12} ${460 - i * 5},${350 + i * 14} 700`}
-          />
-        ))}
-        {Array.from({ length: 14 }, (_, i) => (
-          <ellipse
-            key={i}
-            cx="750"
-            cy="430"
-            rx={35 + i * 22}
-            ry={25 + i * 16}
-            transform="rotate(-28 750 430)"
+            d={path}
+            strokeWidth={major ? 1.05 : 0.55}
+            opacity={major ? 0.6 : 0.32}
           />
         ))}
       </g>
       <g
-        className="survey-lines"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1"
+        className="survey-blocks"
+        fill="#c3cbb1"
+        stroke="#c3cbb1"
+        strokeWidth=".65"
       >
+        <path d="M90 90H270V270H90Z" fillOpacity=".045" />
+        <path d="M360 180H540V360H360Z" fillOpacity=".07" />
+        <path d="M180 360H360V540H180Z" fillOpacity=".045" />
+        <path d="M630 360H810V540H630Z" fillOpacity=".035" />
+      </g>
+      <rect
+        className="survey-grid"
+        width="900"
+        height="650"
+        fill="url(#survey-grid)"
+      />
+      <g className="watercourse" fill="none" stroke="#b1c9ba">
         <path
-          d="M80 100L720 540M120 540L760 120M230 0V650M620 0V650M0 280H900M0 480H900"
-          strokeDasharray="4 7"
+          d="M610 -20C540 90 675 110 590 205S490 295 535 355S465 455 440 490S450 570 365 670"
+          strokeWidth="4"
+          opacity=".08"
         />
         <path
-          d="M135 165L325 125L380 355L175 400ZM475 305L680 250L740 470L540 535Z"
-          fill="currentColor"
-          fillOpacity=".04"
+          d="M610 -20C540 90 675 110 590 205S490 295 535 355S465 455 440 490S450 570 365 670"
+          strokeWidth=".8"
+          opacity=".45"
         />
       </g>
-      <g stroke="currentColor" opacity=".7">
-        {Array.from({ length: 40 }, (_, i) => {
-          const x = 55 + (i % 8) * 110;
-          const y = 50 + Math.floor(i / 8) * 130;
-          return <path key={i} d={`M${x - 4} ${y}h8M${x} ${y - 4}v8`} />;
-        })}
+      <g className="survey-lines" fill="none" stroke="#dedbc2">
+        <path
+          d="M0 324L180 324L285 255L440 255L535 180L900 180M360 650V510L480 420V90"
+          strokeDasharray="3 6"
+          strokeWidth="1"
+        />
+        <path
+          d="M0 327L180 327L285 258L440 258L535 183L900 183"
+          opacity=".2"
+          strokeWidth=".6"
+        />
       </g>
-      <rect width="900" height="650" filter="url(#grain)" opacity=".035" />
+      <g
+        className="survey-annotations"
+        fill="currentColor"
+        fontSize="7"
+        letterSpacing="2"
+      >
+        <text x="32" y="315">
+          CONCEPTUAL TRANSECT
+        </text>
+        <text x="550" y="385" transform="rotate(-90 550 385)">
+          ILLUSTRATIVE DRAINAGE
+        </text>
+        <text x="642" y="346">
+          UNDETERMINED TERRITORY
+        </text>
+      </g>
+      <rect width="900" height="650" filter="url(#map-grain)" opacity=".055" />
     </svg>
   );
 }
@@ -91,6 +201,10 @@ export function ExplorationMap() {
       aria-label="Illustrative exploration map"
     >
       <Contours />
+      <div className="map-registration" aria-hidden="true">
+        <span>+ A</span>
+        <span>B +</span>
+      </div>
       <div className="map-top mono">
         <span>
           Oklahoma / field of possibility
@@ -121,6 +235,9 @@ export function ExplorationMap() {
           aria-expanded={selected === i}
           aria-controls="land-information"
         >
+          <span className="card-anchor" aria-hidden="true">
+            <span />
+          </span>
           <Image src={land.image} alt="" width={160} height={70} />
           <span className="land-copy">
             <small className="mono">
@@ -133,6 +250,16 @@ export function ExplorationMap() {
       ))}
       <div className="funding-ring">
         <svg viewBox="0 0 140 140" aria-hidden="true">
+          <circle
+            cx="70"
+            cy="70"
+            r="68"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeDasharray=".7 4.64"
+            opacity=".45"
+          />
           <circle
             cx="70"
             cy="70"

@@ -1452,3 +1452,200 @@ figure {
     bottom: 68px;
   }
 }
+
+/* Cartographic refinement: imaginary topography with archival survey overlays. */
+.exploration {
+  background: #192b23;
+}
+.contours {
+  opacity: 1;
+  color: #b7c5a6;
+}
+.relief-surface {
+  opacity: 0.14;
+  transition: opacity 0.25s;
+}
+.terrain-lines {
+  opacity: 0.85;
+}
+.survey-grid {
+  opacity: 0.22;
+}
+.survey-blocks {
+  opacity: 0.55;
+}
+.survey-lines {
+  opacity: 0.65;
+}
+.survey-annotations {
+  opacity: 0.4;
+  font-family: var(--font-mono);
+}
+.survey .relief-surface {
+  opacity: 0.025;
+}
+.survey .terrain-lines {
+  opacity: 0.18;
+}
+.survey .survey-grid {
+  opacity: 0.58;
+}
+.survey .survey-blocks {
+  opacity: 0.85;
+}
+.survey .survey-lines {
+  opacity: 1;
+}
+.map-watermark {
+  font-family: var(--font-mono);
+  font-size: clamp(30px, 4vw, 64px);
+  letter-spacing: 0.28em;
+  top: 48%;
+  left: 17%;
+  opacity: 0.055;
+}
+.map-top {
+  position: relative;
+  padding-bottom: 16px;
+  background: #172b2380;
+  border-bottom: 1px solid #c3cbb119;
+}
+.map-registration {
+  position: absolute;
+  inset: 73px 22px auto;
+  display: flex;
+  justify-content: space-between;
+  font: 8px var(--font-mono);
+  opacity: 0.4;
+}
+.land-card {
+  transform: none;
+  border: 1px solid #dcdacc;
+  box-shadow: 0 4px 12px #07120c45;
+  padding: 6px;
+}
+.land-card:hover,
+.land-card:focus-visible {
+  transform: translateY(-3px);
+}
+.land-card[aria-expanded="true"] {
+  outline: 2px solid var(--orange);
+  outline-offset: 3px;
+}
+.land-card img {
+  height: 56px;
+  opacity: 0.86;
+}
+.land-copy {
+  padding: 7px 5px 4px;
+}
+.card-anchor {
+  position: absolute;
+  height: 32px;
+  width: 1px;
+  top: calc(100% + 1px);
+  left: 23px;
+  background: #dfddc29c;
+  pointer-events: none;
+}
+.card-anchor > span {
+  position: absolute;
+  bottom: -5px;
+  left: -4px;
+  width: 9px;
+  height: 9px;
+  border: 1px solid #e8e5c9;
+  background: #263e2e;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px #d6ddbd16;
+}
+.land-0 {
+  top: 112px;
+  left: 10%;
+}
+.land-1 {
+  top: 175px;
+  left: 43%;
+}
+.land-2 {
+  bottom: 106px;
+  left: 22%;
+}
+.funding-ring {
+  right: 7%;
+  bottom: 100px;
+  background: #192e25bf;
+  border-radius: 50%;
+}
+.funding-ring strong {
+  font-size: 38px;
+}
+.funding-ring small {
+  letter-spacing: 0.08em;
+}
+.compass {
+  color: #dadcc6;
+}
+.map-bottom {
+  padding-top: 13px;
+  border-top: 1px solid #c3cbb124;
+}
+@media (max-width: 900px) and (min-width: 701px) {
+  .land-card {
+    width: 120px;
+  }
+  .land-0 {
+    left: 8%;
+  }
+  .land-1 {
+    top: 230px;
+    left: 57%;
+  }
+  .land-2 {
+    bottom: 113px;
+    left: 12%;
+  }
+  .funding-ring {
+    right: 6%;
+    bottom: 75px;
+    width: 104px;
+    height: 104px;
+  }
+}
+@media (max-width: 700px) {
+  .exploration {
+    min-height: 530px;
+  }
+  .land-card {
+    width: 127px;
+  }
+  .land-0 {
+    top: 112px;
+    left: 8%;
+  }
+  .land-1 {
+    top: 180px;
+    left: 56%;
+  }
+  .land-2 {
+    bottom: 105px;
+    left: 13%;
+  }
+  .card-anchor {
+    height: 24px;
+  }
+  .funding-ring {
+    right: 9%;
+    bottom: 85px;
+    width: 104px;
+    height: 104px;
+  }
+  .funding-ring strong {
+    font-size: 32px;
+  }
+  .map-watermark {
+    top: 50%;
+    font-size: 25px;
+    left: 11%;
+  }
+}
